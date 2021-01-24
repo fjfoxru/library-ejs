@@ -2,91 +2,98 @@ const express = require('express');
 const router = express.Router();
 const {Book} = require('../models');
 
-
 const stor = {
     books: [],
 };
-[1, 2, 3].map(el => {
-    const newBook = new Book(`Книга ${el}`, `описание ${el}`);
-    stor.books.push(newBook);
-});
+
 const {books} = stor;
 
 
+[1, 2, 3].map(el => {
+    const newBook = new Book(`книга ${el}`, `описание книги ${el}`);
+    stor.books.push(newBook);
+});
+
 router.get('/', (request, responce) => {
-    responce.render("books/index",
-    {title: "Главная",
-    books: books
+    responce.render("books/index", {
+        title: "Книги",
+        books: books
     });
 });
 
-router.get('/:id', (request, responce) => {
-    const {id} = request.params;
-    const reqBook = books.find(book => book.id === id);
-    if (reqBook) {
-        responce.json(reqBook);
+router.get('/create', (req, res) => {
+    res.render("books/create", {
+        title: "Создание книги",
+        book: {},
+    });
+});
+
+router.get('/:id', (req, res) => {
+    const {id} = req.params;
+    const idx = books.findIndex(el => el.id === id);
+
+    if (idx !== -1) {
+        res.render("books/view", {
+            title: "Просмотр книги",
+            book: books[idx],
+        });
     } else {
-        responce.status(404);
-        responce.json('нет такой книги');
+        res.status(404).redirect('/404');
     }
 });
 
-router.post('/', (request, responce) => {
-    const {title, description} = request.body;
-    const newBook = new Book(title, description);
+router.get('/update/:id', (req, res) => {
+    const {id} = req.params;
+    const idx = books.findIndex(el => el.id === id);
+
+    if (idx !== -1) {
+        res.render("books/update", {
+            title: "Обновление книги",
+            book: books[idx],
+        });
+    } else {
+        res.status(404).redirect('/404');
+    }
+});
+
+
+
+// API
+
+router.post('/create', (req, res) => {
+    const {title, desc} = req.body;
+    const newBook = new Book(title, desc);
     books.push(newBook);
-    responce.status(201);
-    responce.json(newBook);
+    res.redirect('/books')
 });
 
-router.put('/:id', (request, responce) => {
-    const {id} = request.params;
-    const {title, description} = request.body;
-    const reqBook = books.findIndex(book => book.id === id);
-    if (reqBook !== -1) {
-        books[reqBook] === {
-            ...reqBook,
+router.post('/update/:id', (req, res) => {
+    const {id} = req.params;
+    const {title, desc} = req.body;
+    const idx = books.findIndex(el => el.id === id);
+
+    if (idx !== -1) {
+        books[idx] = {
+            ...books[idx],
             title,
-            description
-        }
-        responce.json(reqBook);
+            desc,
+        };
+        res.redirect(`/books/${id}`);
     } else {
-        responce.status(404);
-        responce.json('нет такой книги');
+        res.status(404).redirect('/404');
     }
 });
 
-router.delete('/:id', (request, responce) => {
-    const {id} = request.params;
-    const reqBook = books.findIndex(book => book.id == id);
-    if (reqBook !== -1) {
-        books.splice(reqBook, 1);
-        responce.json('ok');
+router.post('/delete/:id', (req, res) => {
+    const {id} = req.params;
+    const idx = books.findIndex(el => el.id === id);
+
+    if (idx !== -1) {
+        books.splice(idx, 1);
+        res.redirect(`/books`);
     } else {
-        responce.status(404);
-        responce.json('нет такой книги');
+        res.status(404).redirect('/404');
     }
-
 });
-
-
-// router.post('/api/books/:id/upload', fileMiddleware.single('cover'), (request, responce) => {
-//     console.log('111');
-//     if (request.file) {
-//         const {path} = request.file;
-        
-//         responce.json(path);
-//     } else {
-//         responce.json(null);
-//     }
-// })
-
-// router.get('/api/books/:id/download', (request, responce) => {
-//     const {id} = request.params;
-//     responce.download(__dirname+'/public/img'+id+'.png', (err) => {
-//         console.log('Ошибка');
-//     });
-    
-// })
 
 module.exports = router;
