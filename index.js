@@ -1,5 +1,5 @@
 const express = require('express');
-const formData = require("express-form-data");
+const bodyParser = require('body-parser');
 const cors = require('cors');
 
 
@@ -15,7 +15,7 @@ const userRouter = require('./routes/user');
 const app = express();
 app.set('view engine', 'ejs');
 
-app.use(formData.parse());
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 app.use(loggerMiddleware);
 
@@ -28,7 +28,8 @@ app.use('/user', userRouter);
 
 app.use(errorMiddleware);
 
-const PORT = process.env.PORT || 9000;
+const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-    console.log(`server listen ${PORT}`);
+    console.log(`=== start server PORT ${PORT} ===`);
 });
